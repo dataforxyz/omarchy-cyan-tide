@@ -22,9 +22,14 @@ with open("vscode.json", encoding="utf-8") as handle:
     json.load(handle)
 PY
 
+UNIT_TEST_DIR="$(mktemp -d)"
+trap 'rm -rf "$UNIT_TEST_DIR"' EXIT
+sed "s|%h/.local/bin/cyan-tide-rotate|$ROOT_DIR/extras/bin/cyan-tide-rotate|" \
+  extras/systemd/cyan-tide-rotate.service > "$UNIT_TEST_DIR/cyan-tide-rotate.service"
+cp extras/systemd/cyan-tide-rotate.timer "$UNIT_TEST_DIR/cyan-tide-rotate.timer"
 systemd-analyze verify \
-  extras/systemd/cyan-tide-rotate.service \
-  extras/systemd/cyan-tide-rotate.timer
+  "$UNIT_TEST_DIR/cyan-tide-rotate.service" \
+  "$UNIT_TEST_DIR/cyan-tide-rotate.timer"
 
 test -s backgrounds/cyan-tide.jpg
 test -s artwork/cyan-tide.svg
