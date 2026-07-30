@@ -1,0 +1,287 @@
+#!/usr/bin/env bash
+# Rotate the "cyan-tide" Omarchy theme accent by day of week.
+# Mon = bluest -> Sun = greenest. Regenerates the theme's color files and,
+# if cyan-tide is the active theme, re-applies it live.
+set -euo pipefail
+
+THEME_NAME="cyan-tide"
+THEME_DIR="$HOME/.config/omarchy/themes/$THEME_NAME"
+
+# --- pick accent by day of week (1=Mon .. 7=Sun): blue -> green ---
+# Optional arg overrides the day for previewing: cyan-tide-rotate [1-7|mon..sun]
+case "${1:-}" in
+  "")                 DOW="$(date +%u)" ;;
+  [1-7])              DOW="$1" ;;
+  [Mm]on*)            DOW=1 ;;
+  [Tt]ue*)            DOW=2 ;;
+  [Ww]ed*)            DOW=3 ;;
+  [Tt]hu*)            DOW=4 ;;
+  [Ff]ri*)            DOW=5 ;;
+  [Ss]at*)            DOW=6 ;;
+  [Ss]un*)            DOW=7 ;;
+  *) echo "usage: cyan-tide-rotate [1-7|mon..sun]" >&2; exit 1 ;;
+esac
+
+case "$DOW" in
+  1) ACC=279bf5; NAME="azure blue"   ;;
+  2) ACC=20b4ee; NAME="sky cyan"     ;;
+  3) ACC=1ccfe2; NAME="cyan"         ;;
+  4) ACC=22e6c9; NAME="turquoise"    ;;
+  5) ACC=29eeb0; NAME="aqua-green"   ;;
+  6) ACC=31f59c; NAME="mint-green"   ;;
+  7) ACC=3ef589; NAME="spring green" ;;
+esac
+
+HEX="#$ACC"
+R=$((16#${ACC:0:2})); G=$((16#${ACC:2:2})); B=$((16#${ACC:4:2}))
+
+mkdir -p "$THEME_DIR/backgrounds"
+
+# ---- colors.toml (color5 = accent) ----
+cat > "$THEME_DIR/colors.toml" <<EOF
+accent = "$HEX"
+cursor = "#d4fff4"
+foreground = "#d4fff4"
+background = "#06181a"
+selection_foreground = "#06181a"
+selection_background = "#d4fff4"
+
+color0 = "#06181a"
+color1 = "#34f0c0"
+color2 = "#22d3ee"
+color3 = "#5cffd6"
+color4 = "#3acfe0"
+color5 = "$HEX"
+color6 = "#67e8f9"
+color7 = "#a9eeff"
+color8 = "#2b5563"
+color9 = "#5cffe0"
+color10 = "#67ffe6"
+color11 = "#8af6ff"
+color12 = "#7dd3fc"
+color13 = "#5cf0ff"
+color14 = "#b0fff4"
+color15 = "#d4fff4"
+EOF
+
+# ---- alacritty.toml ----
+cat > "$THEME_DIR/alacritty.toml" <<EOF
+[colors.primary]
+background = "#06181a"
+foreground = "#d4fff4"
+
+[colors.cursor]
+text = "#06181a"
+cursor = "#d4fff4"
+
+[colors.vi_mode_cursor]
+text = "#06181a"
+cursor = "#d4fff4"
+
+[colors.search.matches]
+foreground = "#06181a"
+background = "#5cffd6"
+
+[colors.search.focused_match]
+foreground = "#06181a"
+background = "$HEX"
+
+[colors.footer_bar]
+foreground = "#06181a"
+background = "#d4fff4"
+
+[colors.selection]
+text = "#06181a"
+background = "#d4fff4"
+
+[colors.normal]
+black = "#06181a"
+red = "#34f0c0"
+green = "#22d3ee"
+yellow = "#5cffd6"
+blue = "#3acfe0"
+magenta = "$HEX"
+cyan = "#67e8f9"
+white = "#a9eeff"
+
+[colors.bright]
+black = "#2b5563"
+red = "#5cffe0"
+green = "#67ffe6"
+yellow = "#8af6ff"
+blue = "#7dd3fc"
+magenta = "#5cf0ff"
+cyan = "#b0fff4"
+white = "#d4fff4"
+EOF
+
+# ---- ghostty.conf ----
+cat > "$THEME_DIR/ghostty.conf" <<EOF
+background = #06181a
+foreground = #d4fff4
+cursor-color = #d4fff4
+selection-background = #d4fff4
+selection-foreground = #06181a
+
+palette = 0=#06181a
+palette = 1=#34f0c0
+palette = 2=#22d3ee
+palette = 3=#5cffd6
+palette = 4=#3acfe0
+palette = 5=$HEX
+palette = 6=#67e8f9
+palette = 7=#a9eeff
+palette = 8=#2b5563
+palette = 9=#5cffe0
+palette = 10=#67ffe6
+palette = 11=#8af6ff
+palette = 12=#7dd3fc
+palette = 13=#5cf0ff
+palette = 14=#b0fff4
+palette = 15=#d4fff4
+EOF
+
+# ---- kitty.conf ----
+cat > "$THEME_DIR/kitty.conf" <<EOF
+background #06181a
+foreground #d4fff4
+cursor #d4fff4
+selection_background #d4fff4
+selection_foreground #06181a
+
+color0 #06181a
+color1 #34f0c0
+color2 #22d3ee
+color3 #5cffd6
+color4 #3acfe0
+color5 $HEX
+color6 #67e8f9
+color7 #a9eeff
+color8 #2b5563
+color9 #5cffe0
+color10 #67ffe6
+color11 #8af6ff
+color12 #7dd3fc
+color13 #5cf0ff
+color14 #b0fff4
+color15 #d4fff4
+EOF
+
+# ---- hyprland.conf (literal $vars -> escape) ----
+cat > "$THEME_DIR/hyprland.conf" <<EOF
+\$activeBorderColor = rgb($ACC)
+
+general {
+    col.active_border = \$activeBorderColor
+}
+
+group {
+    col.border_active = \$activeBorderColor
+}
+EOF
+
+# ---- hyprlock.conf (literal $vars -> escape) ----
+cat > "$THEME_DIR/hyprlock.conf" <<EOF
+\$color = rgba(6,24,26, 1.0)
+\$inner_color = rgba(6,24,26, 0.8)
+\$outer_color = rgba($R,$G,$B, 1.0)
+\$font_color = rgba(212,255,244, 1.0)
+\$check_color = rgba(92,255,214, 1.0)
+EOF
+
+# ---- mako.ini ----
+cat > "$THEME_DIR/mako.ini" <<EOF
+include=~/.local/share/omarchy/default/mako/core.ini
+
+text-color=#d4fff4
+border-color=$HEX
+background-color=#06181a
+EOF
+
+# ---- walker.css ----
+cat > "$THEME_DIR/walker.css" <<EOF
+@define-color selected-text $HEX;
+@define-color text #d4fff4;
+@define-color base #06181a;
+@define-color border $HEX;
+@define-color foreground #d4fff4;
+@define-color background #06181a;
+EOF
+
+# ---- waybar.css ----
+cat > "$THEME_DIR/waybar.css" <<EOF
+@define-color foreground #d4fff4;
+@define-color background #06181a;
+EOF
+
+# ---- swayosd.css ----
+cat > "$THEME_DIR/swayosd.css" <<EOF
+@define-color background-color #06181a;
+@define-color border-color #d4fff4;
+@define-color label #d4fff4;
+@define-color image #d4fff4;
+@define-color progress $HEX;
+EOF
+
+# ---- btop.theme (only hi_fg follows accent) ----
+cat > "$THEME_DIR/btop.theme" <<EOF
+theme[main_bg]="#06181a"
+theme[main_fg]="#d4fff4"
+theme[title]="#3acfe0"
+theme[hi_fg]="$HEX"
+theme[selected_bg]="#2b5563"
+theme[selected_fg]="#d4fff4"
+theme[inactive_fg]="#2b5563"
+theme[proc_misc]="#3acfe0"
+theme[cpu_box]="#22d3ee"
+theme[mem_box]="#22d3ee"
+theme[net_box]="#22d3ee"
+theme[proc_box]="#22d3ee"
+theme[div_line]="#2b5563"
+theme[temp_start]="#34f0c0"
+theme[temp_mid]="#3acfe0"
+theme[temp_end]="$HEX"
+theme[cpu_start]="#67ffe6"
+theme[cpu_mid]="#3acfe0"
+theme[cpu_end]="$HEX"
+theme[free_start]="#3acfe0"
+theme[free_mid]="#5cffd6"
+theme[free_end]="#5cffd6"
+theme[cached_start]="#5cffd6"
+theme[cached_mid]="#5cffd6"
+theme[cached_end]="#5cffd6"
+theme[available_start]="#67e8f9"
+theme[available_mid]="#67e8f9"
+theme[available_end]="#67e8f9"
+theme[used_start]="#34f0c0"
+theme[used_mid]="#22d3ee"
+theme[used_end]="#22d3ee"
+theme[download_start]="#5cffd6"
+theme[download_mid]="#67e8f9"
+theme[download_end]="#3acfe0"
+theme[upload_start]="#5cffd6"
+theme[upload_mid]="#67e8f9"
+theme[upload_end]="#3acfe0"
+EOF
+
+# ---- chromium / icons (constant) ----
+printf '6,24,26' > "$THEME_DIR/chromium.theme"
+
+echo "cyan-tide accent -> $HEX ($NAME) for $(date +%A)"
+
+# ---- re-apply live ONLY if cyan-tide is the active theme ----
+if [ "$(omarchy-theme-current 2>/dev/null || true)" = "Cyan Tide" ]; then
+  # make sure we can reach the running Hyprland session (timer has a bare env)
+  export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+  if [ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+    sig="$(ls -t "$XDG_RUNTIME_DIR/hypr" 2>/dev/null | head -1 || true)"
+    [ -n "$sig" ] && export HYPRLAND_INSTANCE_SIGNATURE="$sig"
+  fi
+  export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}"
+
+  # A Persistent calendar timer can fire immediately after resume. Give
+  # Hyprland/Wayland and the GPU a moment to settle before theme-set restarts
+  # layer-shell clients such as Waybar; otherwise Waybar may run but not render.
+  sleep "${CYAN_TIDE_APPLY_DELAY:-8}"
+  omarchy-theme-set "$THEME_NAME" >/dev/null 2>&1 || true
+fi

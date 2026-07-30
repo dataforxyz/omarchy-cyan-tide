@@ -1,0 +1,6 @@
+[Unit]
+Description=Rotate Cyan Tide theme accent by day of week
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/cyan-tide-rotate
