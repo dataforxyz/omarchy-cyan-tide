@@ -6,6 +6,19 @@ set -euo pipefail
 
 THEME_NAME="cyan-tide"
 THEME_DIR="$HOME/.config/omarchy/themes/$THEME_NAME"
+RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+if [[ ! -d $THEME_DIR ]]; then
+  printf 'Cyan Tide theme not found at %s\n' "$THEME_DIR" >&2
+  exit 1
+fi
+
+# Avoid overlapping timer and manual runs writing the same theme files.
+exec 9>"$RUNTIME_DIR/cyan-tide-rotate.lock"
+if ! flock -n 9; then
+  printf 'Cyan Tide accent rotation is already running; skipping.\n'
+  exit 0
+fi
 
 # --- pick accent by day of week (1=Mon .. 7=Sun): blue -> green ---
 # Optional arg overrides the day for previewing: cyan-tide-rotate [1-7|mon..sun]
@@ -270,18 +283,37 @@ printf '6,24,26' > "$THEME_DIR/chromium.theme"
 echo "cyan-tide accent -> $HEX ($NAME) for $(date +%A)"
 
 # ---- re-apply live ONLY if cyan-tide is the active theme ----
-if [ "$(omarchy-theme-current 2>/dev/null || true)" = "Cyan Tide" ]; then
-  # make sure we can reach the running Hyprland session (timer has a bare env)
-  export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-  if [ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
-    sig="$(ls -t "$XDG_RUNTIME_DIR/hypr" 2>/dev/null | head -1 || true)"
-    [ -n "$sig" ] && export HYPRLAND_INSTANCE_SIGNATURE="$sig"
-  fi
-  export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}"
+ACTIVE_THEME=""
+if [[ -r $HOME/.config/omarchy/current/theme.name ]]; then
+  read -r ACTIVE_THEME < "$HOME/.config/omarchy/current/theme.name" || true
+fi
 
-  # A Persistent calendar timer can fire immediately after resume. Give
+if [[ $ACTIVE_THEME == "$THEME_NAME" ]]; then
+  # Make sure timer-triggered runs can reach the active Hyprland session.
+  export XDG_RUNTIME_DIR="$RUNTIME_DIR"
+  if [[ -z ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
+    sig="$(find "$XDG_RUNTIME_DIR/hypr" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %f\n' 2>/dev/null | sort -nr | head -n 1 | cut -d' ' -f2- || true)"
+    [[ -n $sig ]] && export HYPRLAND_INSTANCE_SIGNATURE="$sig"
+  fi
+  if [[ -z ${WAYLAND_DISPLAY:-} ]]; then
+    for socket in "$XDG_RUNTIME_DIR"/wayland-*; do
+      if [[ -S $socket ]]; then
+        export WAYLAND_DISPLAY="${socket##*/}"
+        break
+      fi
+    done
+  fi
+
+  if [[ -z ${HYPRLAND_INSTANCE_SIGNATURE:-} || -z ${WAYLAND_DISPLAY:-} ]]; then
+    printf 'Accent files updated; no active Hyprland/Wayland session found for live apply.\n' >&2
+    exit 0
+  fi
+
+  # A persistent calendar timer can fire immediately after resume. Give
   # Hyprland/Wayland and the GPU a moment to settle before theme-set restarts
   # layer-shell clients such as Waybar; otherwise Waybar may run but not render.
   sleep "${CYAN_TIDE_APPLY_DELAY:-8}"
-  omarchy-theme-set "$THEME_NAME" >/dev/null 2>&1 || true
+
+  # Reapply colors without cycling the user's current wallpaper.
+  OMARCHY_THEME_SKIP_BACKGROUND=1 omarchy theme set "$THEME_NAME"
 fi

@@ -11,7 +11,8 @@ install -Dm644 "${ROOT_DIR}/extras/systemd/cyan-tide-rotate.timer" "${UNIT_DIR}/
 
 systemctl --user daemon-reload
 systemctl --user enable --now cyan-tide-rotate.timer
+systemctl --user start cyan-tide-rotate.service
 
-printf 'Installed and enabled Cyan Tide daily accent rotation.\n'
-printf 'Run now: cyan-tide-rotate\n'
+printf 'Installed, applied, and enabled Cyan Tide daily accent rotation.\n'
+printf 'Run manually: cyan-tide-rotate\n'
 printf 'Check timer: systemctl --user status cyan-tide-rotate.timer\n'

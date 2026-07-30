@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
+bash -n install-rotation.sh uninstall-rotation.sh extras/bin/cyan-tide-rotate
+
+if command -v shellcheck >/dev/null 2>&1; then
+  shellcheck install-rotation.sh uninstall-rotation.sh extras/bin/cyan-tide-rotate
+fi
+
+python - <<'PY'
+import json
+import tomllib
+
+for path in ("colors.toml", "alacritty.toml", "helix.toml"):
+    with open(path, "rb") as handle:
+        tomllib.load(handle)
+
+with open("vscode.json", encoding="utf-8") as handle:
+    json.load(handle)
+PY
+
+systemd-analyze verify \
+  extras/systemd/cyan-tide-rotate.service \
+  extras/systemd/cyan-tide-rotate.timer
+
+test -s backgrounds/cyan-tide.jpg
+test -s artwork/cyan-tide.svg
+
+printf 'All checks passed.\n'

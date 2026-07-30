@@ -2,11 +2,12 @@
 Description=Daily + at-login Cyan Tide accent rotation
 
 [Timer]
-# ~45s after login (covers the "set correct color for today on boot" case)
-OnStartupSec=45
-# every day at 04:07 local; Persistent catches up if the machine was off
-OnCalendar=*-*-* 04:07:00
+# Apply the correct color shortly after the user manager starts.
+OnStartupSec=45s
+# Rotate at the start of each local day. Persistent catches up after sleep/offline.
+OnCalendar=daily
 Persistent=true
+AccuracySec=1m
 
 [Install]
 WantedBy=timers.target

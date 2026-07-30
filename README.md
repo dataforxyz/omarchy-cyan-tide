@@ -59,7 +59,7 @@ The installer places the script and user units at:
 ~/.config/systemd/user/cyan-tide-rotate.timer
 ```
 
-The timer runs shortly after login and daily at 04:07. It is persistent, so a missed run is applied after wake or the next login. Before reapplying the live theme, the script waits briefly for Hyprland, Wayland, and the GPU to settle; this prevents Waybar from restarting too early during resume.
+The installer applies today's accent immediately. The timer also runs shortly after login and at the start of each local day. It is persistent, so a missed run is applied after wake or the next login. Before reapplying the live theme, the script waits briefly for Hyprland, Wayland, and the GPU to settle; this prevents Waybar from restarting too early during resume. Live reapplication preserves the current wallpaper and concurrent runs are locked to prevent file-write races.
 
 Useful commands:
 
@@ -98,7 +98,7 @@ magick -background none artwork/cyan-tide.svg -resize 3840x2160! -strip -quality
 
 ## Privacy and security
 
-The published files contain no credentials, API tokens, private keys, hostnames, personal filesystem paths, private service URLs, or third-party wallpaper metadata. Systemd uses `%h` and the scripts use `$HOME` so the setup is portable between user accounts.
+A pre-publication scan found no credentials, API tokens, private keys, hostnames, personal filesystem paths, private service URLs, or third-party wallpaper metadata. Systemd uses `%h` and the scripts use `$HOME` so the setup is portable between user accounts.
 
 ## License
 
