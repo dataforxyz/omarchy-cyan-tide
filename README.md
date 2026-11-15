@@ -14,7 +14,7 @@ A deep teal Omarchy theme with bright cyan-to-green accents, an original geometr
 | Turquoise | `#22e6c9` |
 | Mint | `#31f59c` |
 
-The theme includes configuration for Alacritty, Ghostty, Kitty, Hyprland, Hyprlock, Waybar, Walker, Mako, SwayOSD, btop, Helix, Neovim, VS Code, Obsidian, Chromium, and other Omarchy-integrated applications.
+The theme provides matching colors and configuration for Alacritty, Ghostty, Kitty, Hyprland, Hyprlock, Waybar, Walker, Mako, SwayOSD, btop, Helix, Neovim, VS Code, Obsidian, Chromium, and other Omarchy-integrated applications. On Omarchy Quattro, the Omarchy shell and bar use the installed theme through Omarchy’s own theme system; this repository does not replace Quattro’s shell or bar.
 
 ## Install the theme
 
@@ -59,7 +59,7 @@ The installer places the script and user units at:
 ~/.config/systemd/user/cyan-tide-rotate.timer
 ```
 
-The installer applies today's accent immediately. The timer also runs shortly after login and at the start of each local day. It is persistent, so a missed run is applied after wake or the next login. Before reapplying the live theme, the script waits briefly for Hyprland, Wayland, and the GPU to settle; this prevents Waybar from restarting too early during resume. Live reapplication preserves the current wallpaper and concurrent runs are locked to prevent file-write races.
+The installer applies today's accent immediately. The timer also runs shortly after login and at the start of each local day. It is persistent, so a missed run is applied after wake or the next login. Before reapplying the live theme, the script waits briefly for Hyprland, Wayland, and the display stack to settle. Live reapplication preserves the current wallpaper, and concurrent runs are locked to prevent file-write races.
 
 Useful commands:
 
@@ -85,6 +85,27 @@ Set `CYAN_TIDE_APPLY_DELAY` to override the default eight-second live-apply dela
 ```bash
 CYAN_TIDE_APPLY_DELAY=12 cyan-tide-rotate
 ```
+
+## Omarchy Quattro and older versions
+
+The current rotation script detects the active theme through Omarchy Quattro’s
+state file at `~/.local/state/omarchy/current/theme.name`. If Cyan Tide is active,
+it reapplies that day’s accent with `omarchy theme set cyan-tide` while preserving
+the current wallpaper. The script still writes the theme’s companion application
+configuration files; individual applications use the files supported by their
+current Omarchy integration.
+
+This repository’s current `main` targets current Omarchy, including Quattro. The
+previous version is preserved on `archive/pre-quattro-20261115` for reference:
+
+```bash
+git fetch origin
+git show origin/archive/pre-quattro-20261115:README.md
+git switch --detach origin/archive/pre-quattro-20261115
+```
+
+The archive is a historical snapshot, not a maintained release. Use current
+`main` for current Omarchy installs.
 
 ## Wallpaper
 
