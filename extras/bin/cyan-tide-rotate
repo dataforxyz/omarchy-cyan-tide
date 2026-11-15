@@ -284,8 +284,8 @@ echo "cyan-tide accent -> $HEX ($NAME) for $(date +%A)"
 
 # ---- re-apply live ONLY if cyan-tide is the active theme ----
 ACTIVE_THEME=""
-if [[ -r $HOME/.config/omarchy/current/theme.name ]]; then
-  read -r ACTIVE_THEME < "$HOME/.config/omarchy/current/theme.name" || true
+if [[ -r $HOME/.local/state/omarchy/current/theme.name ]]; then
+  read -r ACTIVE_THEME < "$HOME/.local/state/omarchy/current/theme.name" || true
 fi
 
 if [[ $ACTIVE_THEME == "$THEME_NAME" ]]; then
